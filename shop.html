@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Магазин">
+    <meta name="theme-color" content="#667eea">
+    <meta name="msapplication-navbutton-color" content="#667eea">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" id="manifest-placeholder">
+    
+    <!-- PWA Icons (Base64 encoded) -->
+    <link rel="icon" type="image/png" sizes="192x192" id="icon-192">
+    <link rel="icon" type="image/png" sizes="512x512" id="icon-512">
+    <link rel="apple-touch-icon" id="apple-icon">
+    
+    <title>👗 Магазин - Учет продаж</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 100vw;
+        }
+
+        /* PWA Install Banner */
+        .install-banner {
+            background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+            color: white;
+            padding: 12px 15px;
+            text-align: center;
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .install-banner button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-left: 10px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .install-banner .close-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            font-size: 18px;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+        }
+
+        /* Заголовок приложения */
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 15px 15px;
+            text-align: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .app-header.with-banner {
+            padding-top: 70px;
+        }
+
+        .app-header h1 {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .app-header p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .app-status {
+            margin-top: 8px;
+            font-size: 0.8em;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .status-online {
+            color: #51cf66;
+        }
+
+        .status-offline {
+            color: #ff6b6b;
+        }
+
+        /* Основной контент */
+        .main-content {
+            flex: 1;
+            padding: 0 0 80px 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .section {
+            display: none;
+            padding: 20px 15px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Карточки */
+        .mobile-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .mobile-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Формы */
+        .mobile-form-group {
+            margin-bottom: 16px;
+        }
+
+        .mobile-form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .mobile-form-group input, 
+        .mobile-form-group select, 
+        .mobile-form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #fafafa;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-form-group input:focus, 
+        .mobile-form-group select:focus, 
+        .mobile-form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Кнопки */
+        .mobile-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            touch-action: manipulation;
+        }
+
+        .mobile-btn:active {
+            transform: scale(0.98);
+        }
+
+        .mobile-btn-success {
+            background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+        }
+
+        .mobile-btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        }
+
+        .mobile-btn-secondary {
+            background: linear-gradient(135deg, #868e96 0%, #6c757d 100%);
+        }
+
+        .mobile-btn-warning {
+            background: linear-gradient(135deg, #ffd43b 0%, #fab005 100%);
+            color: #333;
+        }
+
+        /* Элементы товаров и продаж */
+        .mobile-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #f0f0f0;
+        }
+
+        .mobile-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .mobile-item-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+            flex: 1;
+        }
+
+        .mobile-item-actions {
+            display: flex;
+            gap: 6px;
+            margin-left: 10px;
+        }
+
+        .mobile-btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+            min-width: auto;
+            width: auto;
+            border-radius: 8px;
+        }
+
+        .mobile-item-details {
+            font-size: 0.9em;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        /* Статистика */
+        .mobile-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .mobile-stats-card {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            text-align: center;
+            padding: 20px 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.3);
+        }
+
+        .mobile-stats-number {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .mobile-stats-label {
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+
+        /* Нижняя навигация */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+            box-shadow: 0 -2px 20px rgba(0,0,0,0.1);
+            z-index: 200;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+            font-size: 0.7em;
+            font-weight: 500;
+            text-align: center;
+            touch-action: manipulation;
+            border-radius: 8px;
+            margin: 0 2px;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .nav-item:active {
+            transform: scale(0.95);
+            background: rgba(102, 126, 234, 0.15);
+        }
+
+        .nav-item-icon {
+            font-size: 1.8em;
+            margin-bottom: 2px;
+        }
+
+        /* Уведомления */
+        .mobile-alert {
+            position: fixed;
+            top: 20px;
+            left: 15px;
+            right: 15px;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideDown 0.3s ease-out;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .mobile-alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .mobile-alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Дата и время */
+        .mobile-datetime {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        .mobile-time-badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* Модальное окно */
+        .mobile-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .mobile-modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .mobile-modal h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* PWA Settings Card */
+        .pwa-settings {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .pwa-settings h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .pwa-feature {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+
+        /* Loading Spinner */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Специальные стили для мобильных устройств */
+        @media (max-width: 480px) {
+            .mobile-stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .mobile-stats-card {
+                padding: 15px;
+            }
+
+            .nav-item {
+                font-size: 0.65em;
+                padding: 6px 2px;
+            }
+
+            .nav-item-icon {
+                font-size: 1.6em;
+            }
+        }
+
+        /* Offline indicator */
+        .offline-bar {
+            background: #ff6b6b;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            display: none;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <!-- Offline Indicator -->
+    <div id="offline-bar" class="offline-bar">
+        📵 Нет подключения к интернету
+    </div>
+
+    <!-- Install Banner -->
+    <div id="install-banner" class="install-banner">
+        <span>📱 Установить приложение на главный экран?</span>
+        <button id="install-btn">Установить</button>
+        <button class="close-btn" id="install-close">×</button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Заголовок приложения -->
+        <div id="app-header" class="app-header">
+            <h1>👗 Магазин</h1>
+            <p>Учет продаж и товаров</p>
+            <div class="app-status">
+                <span id="connection-status">🟢 Онлайн</span>
+                <span>•</span>
+                <span id="app-version">v2.0 PWA</span>
+            </div>
+        </div>
+
+        <!-- Основной контент -->
+        <div class="main-content">
+            <!-- Секция товаров -->
+            <div id="products" class="section active">
+                <!-- PWA Info Card (только при первом запуске) -->
+                <div id="pwa-info" class="pwa-settings" style="display: none;">
+                    <h3>🚀 PWA Приложение установлено!</h3>
+                    <div class="pwa-feature">
+                        <span>📱 Работает как нативное приложение</span>
+                        <span>✅</span>
+                    </div>
+                    <div class="pwa-feature">
+                        <span>💾 Данные сохраняются локально</span>
+                        <span>✅</span>
+                    </div>
+                    <div class="pwa-feature">
+                        <span>🔄 Работает без интернета</span>
+                        <span>✅</span>
+                    </div>
+                    <button class="mobile-btn" onclick="closePWAInfo()" style="margin-top: 10px; background: rgba(255,255,255,0.2);">
+                        Понятно!
+                    </button>
+                </div>
+
+                <div class="mobile-card">
+                    <h3>📦 Добавить товар</h3>
+                    <div class="mobile-form-group">
+                        <label>Название товара</label>
+                        <input type="text" id="productName" placeholder="Футболка Nike">
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>Цена (сом)</label>
+                        <input type="number" id="productPrice" placeholder="1500">
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>Количество</label>
+                        <input type="number" id="productQuantity" placeholder="10">
+                    </div>
+                    <button class="mobile-btn" onclick="addProduct()">
+                        <span>➕</span> Добавить товар
+                    </button>
+                </div>
+
+                <div class="mobile-card">
+                    <h3>📋 Список товаров</h3>
+                    <div id="productsList"></div>
+                </div>
+            </div>
+
+            <!-- Секция продаж -->
+            <div id="sales" class="section">
+                <div class="mobile-card">
+                    <h3>💰 Новая продажа</h3>
+                    <div class="mobile-form-group">
+                        <label>Товар</label>
+                        <select id="saleProduct">
+                            <option value="">Выберите товар</option>
+                        </select>
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>Количество</label>
+                        <input type="number" id="saleQuantity" min="1" placeholder="1">
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>Цена за штуку (сом)</label>
+                        <input type="number" id="salePrice" placeholder="Автоматически">
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>Комментарий (необязательно)</label>
+                        <input type="text" id="saleComment" placeholder="Скидка или примечание">
+                    </div>
+                    <button class="mobile-btn mobile-btn-success" onclick="makeSale()">
+                        <span>✅</span> Оформить продажу
+                    </button>
+                </div>
+
+                <div id="saleResult"></div>
+            </div>
+
+            <!-- История продаж -->
+            <div id="history" class="section">
+                <div class="mobile-card">
+                    <h3>🔍 Фильтры</h3>
+                    <div class="mobile-form-group">
+                        <label>От даты</label>
+                        <input type="date" id="filterFromDate">
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>До даты</label>
+                        <input type="date" id="filterToDate">
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>Товар</label>
+                        <select id="filterProduct">
+                            <option value="">Все товары</option>
+                        </select>
+                    </div>
+                    <button class="mobile-btn" onclick="filterHistory()">
+                        <span>🔍</span> Применить фильтры
+                    </button>
+                    <button class="mobile-btn mobile-btn-secondary" onclick="clearFilters()">
+                        <span>🗑️</span> Сбросить
+                    </button>
+                </div>
+
+                <div class="mobile-card">
+                    <h3>📚 История продаж</h3>
+                    <div id="historyList"></div>
+                </div>
+            </div>
+
+            <!-- Статистика -->
+            <div id="stats" class="section">
+                <div class="mobile-stats-grid">
+                    <div class="mobile-stats-card">
+                        <span class="mobile-stats-number" id="totalSales">0</span>
+                        <div class="mobile-stats-label">Продажи (сом)</div>
+                    </div>
+                    <div class="mobile-stats-card">
+                        <span class="mobile-stats-number" id="totalItems">0</span>
+                        <div class="mobile-stats-label">Товаров продано</div>
+                    </div>
+                    <div class="mobile-stats-card">
+                        <span class="mobile-stats-number" id="totalProducts">0</span>
+                        <div class="mobile-stats-label">Видов товара</div>
+                    </div>
+                    <div class="mobile-stats-card">
+                        <span class="mobile-stats-number" id="totalProfit">0</span>
+                        <div class="mobile-stats-label">Прибыль (сом)</div>
+                    </div>
+                </div>
+
+                <div class="mobile-card">
+                    <h3>🏆 Топ товары</h3>
+                    <div id="topProducts"></div>
+                </div>
+            </div>
+
+            <!-- Расходы -->
+            <div id="expenses" class="section">
+                <div class="mobile-card">
+                    <h3>💳 Добавить операцию</h3>
+                    <div class="mobile-form-group">
+                        <label>Тип</label>
+                        <select id="expenseType">
+                            <option value="income">📈 Приход</option>
+                            <option value="expense">📉 Расход</option>
+                        </select>
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>Сумма (сом)</label>
+                        <input type="number" id="expenseAmount" placeholder="1000">
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>Дата</label>
+                        <input type="date" id="expenseDate">
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>Описание</label>
+                        <input type="text" id="expenseDescription" placeholder="Закупка, аренда...">
+                    </div>
+                    <button class="mobile-btn" onclick="addExpense()">
+                        <span>💾</span> Добавить операцию
+                    </button>
+                </div>
+
+                <div class="mobile-card">
+                    <h3>📊 История операций</h3>
+                    <div id="expensesList"></div>
+                </div>
+            </div>
+
+            <!-- Заметки -->
+            <div id="notes" class="section">
+                <div class="mobile-card">
+                    <h3>📝 Новая заметка</h3>
+                    <div class="mobile-form-group">
+                        <label>Заголовок</label>
+                        <input type="text" id="noteTitle" placeholder="Важная информация">
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>Текст</label>
+                        <textarea id="noteText" rows="4" placeholder="Ваша заметка..."></textarea>
+                    </div>
+                    <button class="mobile-btn" onclick="addNote()">
+                        <span>💾</span> Сохранить заметку
+                    </button>
+                </div>
+
+                <div class="mobile-card">
+                    <h3>📋 Мои заметки</h3>
+                    <div id="notesList"></div>
+                </div>
+
+                <!-- PWA Export/Import -->
+                <div class="mobile-card">
+                    <h3>⚙️ Управление данными</h3>
+                    <button class="mobile-btn mobile-btn-secondary" onclick="exportData()">
+                        <span>📤</span> Экспорт данных
+                    </button>
+                    <button class="mobile-btn mobile-btn-secondary" onclick="importData()">
+                        <span>📥</span> Импорт данных
+                    </button>
+                    <button class="mobile-btn mobile-btn-danger" onclick="clearAllData()">
+                        <span>🗑️</span> Очистить все данные
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Нижняя навигация -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="showSection('products')">
+                <div class="nav-item-icon">📦</div>
+                <div>Товары</div>
+            </div>
+            <div class="nav-item" onclick="showSection('sales')">
+                <div class="nav-item-icon">💰</div>
+                <div>Продажи</div>
+            </div>
+            <div class="nav-item" onclick="showSection('history')">
+                <div class="nav-item-icon">📚</div>
+                <div>История</div>
+            </div>
+            <div class="nav-item" onclick="showSection('stats')">
+                <div class="nav-item-icon">📈</div>
+                <div>Статистика</div>
+            </div>
+            <div class="nav-item" onclick="showSection('expenses')">
+                <div class="nav-item-icon">💳</div>
+                <div>Расходы</div>
+            </div>
+            <div class="nav-item" onclick="showSection('notes')">
+                <div class="nav-item-icon">📝</div>
+                <div>Заметки</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // PWA Variables
+        let deferredPrompt;
+        let isStandalone = false;
+        
+        // App Data
+        let products = [];
+        let sales = [];
+        let expenses = [];
+        let notes = [];
+
+        // PWA Setup
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePWA();
+            loadData();
+            updateAllViews();
+            setupOfflineHandling();
+            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+            
+            // Prevent zoom on double tap
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+
+            // Check if running as standalone app
+            checkStandaloneMode();
+        });
+
+        function initializePWA() {
+            // Create manifest dynamically
+            const manifestBlob = new Blob([JSON.stringify({
+                "name": "Магазин - Учет продаж",
+                "short_name": "Магазин",
+                "description": "Приложение для учета продаж и товаров в магазине одежды",
+                "start_url": window.location.pathname,
+                "display": "standalone",
+                "orientation": "portrait-primary",
+                "theme_color": "#667eea",
+                "background_color": "#667eea",
+                "categories": ["business", "productivity"],
+                "lang": "ru",
+                "scope": "/",
+                "icons": [
+                    {
+                        "src": createIcon(192),
+                        "sizes": "192x192",
+                        "type": "image/png",
+                        "purpose": "any maskable"
+                    },
+                    {
+                        "src": createIcon(512),
+                        "sizes": "512x512",
+                        "type": "image/png",
+                        "purpose": "any maskable"
+                    }
+                ]
+            })], { type: 'application/json' });
+
+            const manifestURL = URL.createObjectURL(manifestBlob);
+            document.getElementById('manifest-placeholder').href = manifestURL;
+
+            // Set icons
+            document.getElementById('icon-192').href = createIcon(192);
+            document.getElementById('icon-512').href = createIcon(512);
+            document.getElementById('apple-icon').href = createIcon(180);
+
+            // Install prompt handling
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                showInstallBanner();
+            });
+
+            // Install button event
+            document.getElementById('install-btn').addEventListener('click', installPWA);
+            document.getElementById('install-close').addEventListener('click', hideInstallBanner);
+
+            // Register service worker
+            if ('serviceWorker' in navigator) {
+                registerServiceWorker();
+            }
+        }
+
+        function createIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+
+            // Add dress emoji/icon
+            ctx.fillStyle = 'white';
+            ctx.font = `${size * 0.5}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('👗', size / 2, size / 2);
+
+            return canvas.toDataURL();
+        }
+
+        function registerServiceWorker() {
+            const swCode = `
+                const CACHE_NAME = 'shop-app-v2';
+                const urlsToCache = [
+                    '/',
+                    '/offline.html'
+                ];
+
+                self.addEventListener('install', function(event) {
+                    event.waitUntil(
+                        caches.open(CACHE_NAME)
+                            .then(function(cache) {
+                                return cache.addAll(urlsToCache);
+                            })
+                    );
+                });
+
+                self.addEventListener('fetch', function(event) {
+                    event.respondWith(
+                        caches.match(event.request)
+                            .then(function(response) {
+                                if (response) {
+                                    return response;
+                                }
+                                return fetch(event.request);
+                            }
+                        )
+                    );
+                });
+            `;
+
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swURL = URL.createObjectURL(blob);
+
+            navigator.serviceWorker.register(swURL)
+                .then(function(registration) {
+                    console.log('SW registered successfully');
+                })
+                .catch(function(error) {
+                    console.log('SW registration failed');
+                });
+        }
+
+        function showInstallBanner() {
+            const banner = document.getElementById('install-banner');
+            const header = document.getElementById('app-header');
+            banner.style.display = 'block';
+            header.classList.add('with-banner');
+        }
+
+        function hideInstallBanner() {
+            const banner = document.getElementById('install-banner');
+            const header = document.getElementById('app-header');
+            banner.style.display = 'none';
+            header.classList.remove('with-banner');
+        }
+
+        function installPWA() {
+            hideInstallBanner();
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        showMobileAlert('Приложение устанавливается!', 'success');
+                        setTimeout(() => {
+                            document.getElementById('pwa-info').style.display = 'block';
+                        }, 2000);
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+
+        function checkStandaloneMode() {
+            isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                          window.navigator.standalone ||
+                          document.referrer.includes('android-app://');
+            
+            if (isStandalone) {
+                document.getElementById('pwa-info').style.display = 'block';
+            }
+        }
+
+        function closePWAInfo() {
+            document.getElementById('pwa-info').style.display = 'none';
+        }
+
+        function setupOfflineHandling() {
+            const updateConnectionStatus = () => {
+                const statusElement = document.getElementById('connection-status');
+                const offlineBar = document.getElementById('offline-bar');
+                
+                if (navigator.onLine) {
+                    statusElement.innerHTML = '🟢 Онлайн';
+                    statusElement.className = 'status-online';
+                    offlineBar.style.display = 'none';
+                } else {
+                    statusElement.innerHTML = '🔴 Офлайн';
+                    statusElement.className = 'status-offline';
+                    offlineBar.style.display = 'block';
+                }
+            };
+
+            window.addEventListener('online', updateConnectionStatus);
+            window.addEventListener('offline', updateConnectionStatus);
+            updateConnectionStatus();
+        }
+
+        // Date and time functions
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            const dateOptions = { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit'
+            };
+            const timeOptions = { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false
+            };
+            
+            const formattedDate = date.toLocaleDateString('ru-RU', dateOptions);
+            const formattedTime = date.toLocaleTimeString('ru-RU', timeOptions);
+            
+            return {
+                date: formattedDate,
+                time: formattedTime,
+                full: `${formattedDate} в ${formattedTime}`
+            };
+        }
+
+        function getCurrentDateTime() {
+            return new Date().toISOString();
+        }
+
+        function updateAllViews() {
+            updateProductsList();
+            updateSalesProductSelect();
+            updateFilterProductSelect();
+            updateStatistics();
+            updateExpensesList();
+            updateNotesList();
+            updateHistoryList();
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            const targetSection = document.getElementById(sectionId);
+            targetSection.classList.add('active');
+            
+            event.currentTarget.classList.add('active');
+        }
+
+        // Products management
+        function addProduct() {
+            showLoading(true);
+            
+            setTimeout(() => {
+                const name = document.getElementById('productName').value.trim();
+                const price = parseFloat(document.getElementById('productPrice').value);
+                const quantity = parseInt(document.getElementById('productQuantity').value);
+
+                if (!name || !price || !quantity) {
+                    showMobileAlert('Заполните все поля!', 'danger');
+                    showLoading(false);
+                    return;
+                }
+
+                const product = {
+                    id: Date.now(),
+                    name: name,
+                    price: price,
+                    quantity: quantity,
+                    sold: 0,
+                    createdAt: getCurrentDateTime()
+                };
+
+                products.push(product);
+                saveData();
+                updateAllViews();
+                clearProductForm();
+                showMobileAlert('Товар успешно добавлен!', 'success');
+                showLoading(false);
+            }, 500);
+        }
+
+        function updateProductsList() {
+            const list = document.getElementById('productsList');
+            if (products.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Нет товаров</p>';
+                return;
+            }
+
+            list.innerHTML = products.map(product => {
+                const dateTime = product.createdAt ? formatDateTime(product.createdAt) : null;
+                return `
+                    <div class="mobile-item">
+                        <div class="mobile-item-header">
+                            <div class="mobile-item-title">${product.name}</div>
+                            <div class="mobile-item-actions">
+                                <button class="mobile-btn mobile-btn-danger mobile-btn-small" onclick="deleteProduct(${product.id})">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mobile-item-details">
+                            💰 ${product.price} сом • 📦 ${product.quantity} в наличии • 📊 ${product.sold} продано
+                            ${dateTime ? `<div class="mobile-datetime">📅 ${dateTime.full}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteProduct(id) {
+            if (confirm('Удалить этот товар?')) {
+                products = products.filter(p => p.id !== id);
+                saveData();
+                updateAllViews();
+                showMobileAlert('Товар удален!', 'success');
+            }
+        }
+
+        function clearProductForm() {
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productQuantity').value = '';
+        }
+
+        // Sales management
+        function updateSalesProductSelect() {
+            const select = document.getElementById('saleProduct');
+            select.innerHTML = '<option value="">Выберите товар</option>';
+            
+            products.forEach(product => {
+                if (product.quantity > 0) {
+                    select.innerHTML += `<option value="${product.id}">${product.name} (${product.quantity} шт)</option>`;
+                }
+            });
+
+            select.addEventListener('change', function() {
+                const productId = parseInt(this.value);
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                    document.getElementById('salePrice').value = product.price;
+                }
+            });
+        }
+
+        function makeSale() {
+            showLoading(true);
+            
+            setTimeout(() => {
+                const productId = parseInt(document.getElementById('saleProduct').value);
+                const quantity = parseInt(document.getElementById('saleQuantity').value);
+                const price = parseFloat(document.getElementById('salePrice').value);
+                const comment = document.getElementById('saleComment').value.trim();
+
+                if (!productId || !quantity || !price) {
+                    showMobileAlert('Заполните все поля!', 'danger');
+                    showLoading(false);
+                    return;
+                }
+
+                const product = products.find(p => p.id === productId);
+                if (!product) {
+                    showMobileAlert('Товар не найден!', 'danger');
+                    showLoading(false);
+                    return;
+                }
+
+                if (quantity > product.quantity) {
+                    showMobileAlert('Недостаточно товара!', 'danger');
+                    showLoading(false);
+                    return;
+                }
+
+                // Update product
+                product.quantity -= quantity;
+                product.sold += quantity;
+
+                // Add sale
+                const saleDateTime = getCurrentDateTime();
+                const sale = {
+                    id: Date.now(),
+                    productId: productId,
+                    productName: product.name,
+                    quantity: quantity,
+                    price: price,
+                    total: quantity * price,
+                    comment: comment,
+                    date: saleDateTime
+                };
+
+                sales.push(sale);
+                saveData();
+                updateAllViews();
+                clearSaleForm();
+
+                const saleTime = formatDateTime(saleDateTime);
+                document.getElementById('saleResult').innerHTML = `
+                    <div class="mobile-card" style="background: #d4edda; border: 1px solid #c3e6cb;">
+                        <h3 style="color: #155724;">✅ Продажа оформлена!</h3>
+                        <div style="color: #155724;">
+                            <p><strong>📅 Время:</strong> ${saleTime.full}</p>
+                            <p><strong>📦 Товар:</strong> ${product.name}</p>
+                            <p><strong>📊 Количество:</strong> ${quantity} шт</p>
+                            <p><strong>💰 Цена:</strong> ${price} сом</p>
+                            <p><strong>💵 Итого:</strong> ${quantity * price} сом</p>
+                            ${comment ? `<p><strong>💬 Комментарий:</strong> ${comment}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                showLoading(false);
+            }, 500);
+        }
+
+        function clearSaleForm() {
+            document.getElementById('saleProduct').value = '';
+            document.getElementById('saleQuantity').value = '';
+            document.getElementById('salePrice').value = '';
+            document.getElementById('saleComment').value = '';
+        }
+
+        // Sales history
+        function updateHistoryList(filteredSales = null) {
+            const list = document.getElementById('historyList');
+            const salesToShow = filteredSales || sales;
+
+            if (salesToShow.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Нет продаж</p>';
+                return;
+            }
+
+            const sortedSales = salesToShow.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            list.innerHTML = sortedSales.map(sale => {
+                const dateTime = formatDateTime(sale.date);
+                return `
+                    <div class="mobile-item">
+                        <div class="mobile-item-header">
+                            <div class="mobile-item-title">${sale.productName}</div>
+                            <div class="mobile-item-actions">
+                                <button class="mobile-btn mobile-btn-warning mobile-btn-small" onclick="editSale(${sale.id})">
+                                    ✏️
+                                </button>
+                                <button class="mobile-btn mobile-btn-danger mobile-btn-small" onclick="deleteSale(${sale.id})">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mobile-item-details">
+                            📊 ${sale.quantity} шт × ${sale.price} сом = <strong style="color: #28a745;">${sale.total} сом</strong><br>
+                            ${sale.comment ? `💬 ${sale.comment}<br>` : ''}
+                            <div class="mobile-datetime">📅 ${dateTime.full}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteSale(saleId) {
+            const sale = sales.find(s => s.id === saleId);
+            if (!sale) return;
+
+            const saleTime = formatDateTime(sale.date);
+            if (confirm(`Удалить продажу?\n\n📦 ${sale.productName}\n📊 ${sale.quantity} шт\n💵 ${sale.total} сом\n📅 ${saleTime.full}\n\n⚠️ Товар вернется в наличие!`)) {
+                const product = products.find(p => p.id === sale.productId);
+                if (product) {
+                    product.quantity += sale.quantity;
+                    product.sold -= sale.quantity;
+                    if (product.sold < 0) product.sold = 0;
+                }
+
+                sales = sales.filter(s => s.id !== saleId);
+                saveData();
+                updateAllViews();
+                showMobileAlert('Продажа удалена!', 'success');
+            }
+        }
+
+        function editSale(saleId) {
+            const sale = sales.find(s => s.id === saleId);
+            if (!sale) return;
+
+            const saleTime = formatDateTime(sale.date);
+            showEditSaleModal(sale, saleTime);
+        }
+
+        function showEditSaleModal(sale, saleTime) {
+            const modal = document.createElement('div');
+            modal.className = 'mobile-modal';
+            modal.innerHTML = `
+                <div class="mobile-modal-content">
+                    <h3>✏️ Редактировать продажу</h3>
+                    <div class="mobile-form-group">
+                        <label>📅 Время продажи</label>
+                        <input type="text" value="${saleTime.full}" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>📦 Товар</label>
+                        <input type="text" value="${sale.productName}" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>📊 Количество</label>
+                        <input type="number" id="editQuantity" value="${sale.quantity}" min="1">
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>💰 Цена за штуку (сом)</label>
+                        <input type="number" id="editPrice" value="${sale.price}">
+                    </div>
+                    <div class="mobile-form-group">
+                        <label>💬 Комментарий</label>
+                        <input type="text" id="editComment" value="${sale.comment || ''}">
+                    </div>
+                    <button class="mobile-btn mobile-btn-success" onclick="saveSaleEdit(${sale.id})">
+                        💾 Сохранить
+                    </button>
+                    <button class="mobile-btn mobile-btn-secondary" onclick="cancelSaleEdit()">
+                        ❌ Отмена
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            modal.onclick = (e) => {
+                if (e.target === modal) cancelSaleEdit();
+            };
+        }
+
+        function saveSaleEdit(saleId) {
+            const newQuantity = parseInt(document.getElementById('editQuantity').value);
+            const newPrice = parseFloat(document.getElementById('editPrice').value);
+            const newComment = document.getElementById('editComment').value.trim();
+
+            if (!newQuantity || !newPrice || newQuantity < 1 || newPrice < 0) {
+                showMobileAlert('Проверьте данные!', 'danger');
+                return;
+            }
+
+            const sale = sales.find(s => s.id === saleId);
+            const product = products.find(p => p.id === sale.productId);
+
+            if (product) {
+                product.quantity += sale.quantity;
+                product.sold -= sale.quantity;
+
+                if (newQuantity > product.quantity) {
+                    showMobileAlert(`Недостаточно товара! В наличии: ${product.quantity} шт`, 'danger');
+                    return;
+                }
+
+                product.quantity -= newQuantity;
+                product.sold += newQuantity;
+            }
+
+            sale.quantity = newQuantity;
+            sale.price = newPrice;
+            sale.total = newQuantity * newPrice;
+            sale.comment = newComment;
+
+            saveData();
+            updateAllViews();
+            cancelSaleEdit();
+            showMobileAlert('Продажа изменена!', 'success');
+        }
+
+        function cancelSaleEdit() {
+            const modal = document.querySelector('.mobile-modal');
+            if (modal) modal.remove();
+        }
+
+        function updateFilterProductSelect() {
+            const select = document.getElementById('filterProduct');
+            select.innerHTML = '<option value="">Все товары</option>';
+            
+            const uniqueProducts = [...new Set(sales.map(sale => sale.productName))];
+            uniqueProducts.forEach(productName => {
+                select.innerHTML += `<option value="${productName}">${productName}</option>`;
+            });
+        }
+
+        function filterHistory() {
+            const fromDate = document.getElementById('filterFromDate').value;
+            const toDate = document.getElementById('filterToDate').value;
+            const productName = document.getElementById('filterProduct').value;
+
+            let filteredSales = sales;
+
+            if (fromDate) {
+                filteredSales = filteredSales.filter(sale => 
+                    new Date(sale.date) >= new Date(fromDate)
+                );
+            }
+
+            if (toDate) {
+                filteredSales = filteredSales.filter(sale => 
+                    new Date(sale.date) <= new Date(toDate + 'T23:59:59')
+                );
+            }
+
+            if (productName) {
+                filteredSales = filteredSales.filter(sale => 
+                    sale.productName === productName
+                );
+            }
+
+            updateHistoryList(filteredSales);
+        }
+
+        function clearFilters() {
+            document.getElementById('filterFromDate').value = '';
+            document.getElementById('filterToDate').value = '';
+            document.getElementById('filterProduct').value = '';
+            updateHistoryList();
+        }
+
+        // Statistics
+        function updateStatistics() {
+            const totalSalesAmount = sales.reduce((sum, sale) => sum + sale.total, 0);
+            const totalItemsSold = sales.reduce((sum, sale) => sum + sale.quantity, 0);
+            const totalExpenses = expenses.filter(e => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
+            const totalIncome = expenses.filter(e => e.type === 'income').reduce((sum, e) => sum + e.amount, 0);
+            const totalProfit = totalSalesAmount + totalIncome - totalExpenses;
+
+            document.getElementById('totalSales').textContent = formatNumber(totalSalesAmount);
+            document.getElementById('totalItems').textContent = totalItemsSold;
+            document.getElementById('totalProducts').textContent = products.length;
+            document.getElementById('totalProfit').textContent = formatNumber(totalProfit);
+
+            updateTopProducts();
+        }
+
+        function updateTopProducts() {
+            const productStats = {};
+            sales.forEach(sale => {
+                if (!productStats[sale.productName]) {
+                    productStats[sale.productName] = { quantity: 0, total: 0 };
+                }
+                productStats[sale.productName].quantity += sale.quantity;
+                productStats[sale.productName].total += sale.total;
+            });
+
+            const topProducts = Object.entries(productStats)
+                .sort((a, b) => b[1].total - a[1].total)
+                .slice(0, 5);
+
+            const topProductsList = document.getElementById('topProducts');
+            if (topProducts.length === 0) {
+                topProductsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Нет данных</p>';
+            } else {
+                topProductsList.innerHTML = topProducts.map(([name, stats], index) => `
+                    <div class="mobile-item">
+                        <div class="mobile-item-header">
+                            <div class="mobile-item-title">${index + 1}. ${name}</div>
+                        </div>
+                        <div class="mobile-item-details">
+                            📊 ${stats.quantity} шт • 💰 ${formatNumber(stats.total)} сом
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Expenses
+        function addExpense() {
+            const type = document.getElementById('expenseType').value;
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const date = document.getElementById('expenseDate').value;
+            const description = document.getElementById('expenseDescription').value.trim();
+
+            if (!amount || !date || !description) {
+                showMobileAlert('Заполните все поля!', 'danger');
+                return;
+            }
+
+            const expense = {
+                id: Date.now(),
+                type: type,
+                amount: amount,
+                date: date,
+                description: description,
+                createdAt: getCurrentDateTime()
+            };
+
+            expenses.push(expense);
+            saveData();
+            updateAllViews();
+            clearExpenseForm();
+            showMobileAlert('Операция добавлена!', 'success');
+        }
+
+        function updateExpensesList() {
+            const list = document.getElementById('expensesList');
+            
+            if (expenses.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Нет операций</p>';
+                return;
+            }
+
+            const sortedExpenses = expenses.sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+
+            list.innerHTML = sortedExpenses.map(expense => {
+                const operationDate = new Date(expense.date).toLocaleDateString('ru-RU');
+                const createdTime = expense.createdAt ? formatDateTime(expense.createdAt) : null;
+                const isIncome = expense.type === 'income';
+                
+                return `
+                    <div class="mobile-item">
+                        <div class="mobile-item-header">
+                            <div class="mobile-item-title">
+                                ${isIncome ? '📈' : '📉'} ${expense.description}
+                            </div>
+                            <div class="mobile-item-actions">
+                                <button class="mobile-btn mobile-btn-danger mobile-btn-small" onclick="deleteExpense(${expense.id})">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mobile-item-details">
+                            💰 <strong style="color: ${isIncome ? '#28a745' : '#dc3545'};">${formatNumber(expense.amount)} сом</strong><br>
+                            📅 Операция: ${operationDate}
+                            ${createdTime ? `<div class="mobile-datetime">📝 Добавлено: ${createdTime.full}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteExpense(id) {
+            if (confirm('Удалить эту операцию?')) {
+                expenses = expenses.filter(e => e.id !== id);
+                saveData();
+                updateAllViews();
+                showMobileAlert('Операция удалена!', 'success');
+            }
+        }
+
+        function clearExpenseForm() {
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expenseDescription').value = '';
+        }
+
+        // Notes
+        function addNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const text = document.getElementById('noteText').value.trim();
+
+            if (!title || !text) {
+                showMobileAlert('Заполните все поля!', 'danger');
+                return;
+            }
+
+            const note = {
+                id: Date.now(),
+                title: title,
+                text: text,
+                date: getCurrentDateTime()
+            };
+
+            notes.push(note);
+            saveData();
+            updateNotesList();
+            clearNoteForm();
+            showMobileAlert('Заметка сохранена!', 'success');
+        }
+
+        function updateNotesList() {
+            const list = document.getElementById('notesList');
+            
+            if (notes.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Нет заметок</p>';
+                return;
+            }
+
+            const sortedNotes = notes.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            list.innerHTML = sortedNotes.map(note => {
+                const dateTime = formatDateTime(note.date);
+                return `
+                    <div class="mobile-item">
+                        <div class="mobile-item-header">
+                            <div class="mobile-item-title">📝 ${note.title}</div>
+                            <div class="mobile-item-actions">
+                                <button class="mobile-btn mobile-btn-danger mobile-btn-small" onclick="deleteNote(${note.id})">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mobile-item-details">
+                            <div style="background: white; padding: 10px; border-radius: 8px; margin-top: 8px; border-left: 3px solid #667eea;">
+                                ${note.text}
+                            </div>
+                            <div class="mobile-datetime">📅 ${dateTime.full}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteNote(id) {
+            if (confirm('Удалить эту заметку?')) {
+                notes = notes.filter(n => n.id !== id);
+                saveData();
+                updateNotesList();
+                showMobileAlert('Заметка удалена!', 'success');
+            }
+        }
+
+        function clearNoteForm() {
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteText').value = '';
+        }
+
+        // Data management
+        function saveData() {
+            try {
+                localStorage.setItem('shop-products', JSON.stringify(products));
+                localStorage.setItem('shop-sales', JSON.stringify(sales));
+                localStorage.setItem('shop-expenses', JSON.stringify(expenses));
+                localStorage.setItem('shop-notes', JSON.stringify(notes));
+                localStorage.setItem('shop-last-sync', new Date().toISOString());
+            } catch (error) {
+                console.log('Storage not available');
+            }
+        }
+
+        function loadData() {
+            try {
+                products = JSON.parse(localStorage.getItem('shop-products') || '[]');
+                sales = JSON.parse(localStorage.getItem('shop-sales') || '[]');
+                expenses = JSON.parse(localStorage.getItem('shop-expenses') || '[]');
+                notes = JSON.parse(localStorage.getItem('shop-notes') || '[]');
+            } catch (error) {
+                console.log('Error loading data');
+                products = [];
+                sales = [];
+                expenses = [];
+                notes = [];
+            }
+        }
+
+        function exportData() {
+            const data = {
+                products,
+                sales,
+                expenses,
+                notes,
+                exportDate: getCurrentDateTime(),
+                version: '2.0'
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `магазин_данные_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            showMobileAlert('Данные экспортированы!', 'success');
+        }
+
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    showLoading(true);
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            
+                            if (confirm('Импорт данных заменит все текущие данные. Продолжить?')) {
+                                products = data.products || [];
+                                sales = data.sales || [];
+                                expenses = data.expenses || [];
+                                notes = data.notes || [];
+                                
+                                saveData();
+                                updateAllViews();
+                                
+                                showMobileAlert('Данные успешно импортированы!', 'success');
+                            }
+                        } catch (error) {
+                            showMobileAlert('Ошибка при импорте данных!', 'danger');
+                        } finally {
+                            showLoading(false);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ ВНИМАНИЕ!\n\nЭто действие удалит ВСЕ данные:\n• Все товары\n• Всю историю продаж\n• Все расходы и доходы\n• Все заметки\n\nПродолжить?')) {
+                if (confirm('Вы уверены? Это действие нельзя отменить!')) {
+                    products = [];
+                    sales = [];
+                    expenses = [];
+                    notes = [];
+                    
+                    saveData();
+                    updateAllViews();
+                    
+                    showMobileAlert('Все данные очищены!', 'success');
+                }
+            }
+        }
+
+        // Utility functions
+        function showLoading(show) {
+            document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function showMobileAlert(message, type) {
+            const existingAlerts = document.querySelectorAll('.mobile-alert');
+            existingAlerts.forEach(alert => alert.remove());
+
+            const alert = document.createElement('div');
+            alert.className = `mobile-alert mobile-alert-${type}`;
+            alert.innerHTML = `<strong>${type === 'success' ? '✅' : '❌'}</strong> ${message}`;
+
+            document.body.appendChild(alert);
+
+            // Vibration feedback
+            if (navigator.vibrate) {
+                navigator.vibrate(type === 'success' ? [100] : [100, 50, 100]);
+            }
+
+            // Auto remove
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 4000);
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString('ru-RU');
+        }
+
+        // Touch gestures for navigation
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        document.addEventListener('touchstart', function(e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        document.addEventListener('touchend', function(e) {
+            if (!touchStartX || !touchStartY) return;
+
+            let touchEndX = e.changedTouches[0].clientX;
+            let touchEndY = e.changedTouches[0].clientY;
+
+            let diffX = touchStartX - touchEndX;
+            let diffY = touchStartY - touchEndY;
+
+            // Only horizontal swipes with minimum distance
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                const sections = ['products', 'sales', 'history', 'stats', 'expenses', 'notes'];
+                const currentSection = document.querySelector('.section.active').id;
+                const currentIndex = sections.indexOf(currentSection);
+
+                if (diffX > 0 && currentIndex < sections.length - 1) {
+                    // Swipe left - next section
+                    const navItems = document.querySelectorAll('.nav-item');
+                    navItems[currentIndex + 1].click();
+                } else if (diffX < 0 && currentIndex > 0) {
+                    // Swipe right - previous section
+                    const navItems = document.querySelectorAll('.nav-item');
+                    navItems[currentIndex - 1].click();
+                }
+            }
+
+            touchStartX = 0;
+            touchStartY = 0;
+        }, { passive: true });
+
+        // PWA app shortcuts
+        if ('navigator' in window && 'setAppBadge' in navigator) {
+            // Update app badge with total sales count
+            function updateAppBadge() {
+                try {
+                    const todaySales = sales.filter(sale => {
+                        const saleDate = new Date(sale.date).toDateString();
+                        const today = new Date().toDateString();
+                        return saleDate === today;
+                    }).length;
+                    
+                    if (todaySales > 0) {
+                        navigator.setAppBadge(todaySales);
+                    } else {
+                        navigator.clearAppBadge();
+                    }
+                } catch (error) {
+                    console.log('App badge not supported');
+                }
+            }
+
+            // Update badge when sales change
+            setInterval(updateAppBadge, 30000); // Every 30 seconds
+        }
+
+        // Push notifications (when available)
+        function requestNotificationPermission() {
+            if ('Notification' in window && 'serviceWorker' in navigator) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        showMobileAlert('Уведомления включены!', 'success');
+                    }
+                });
+            }
+        }
+
+        function showNotification(title, body, icon = null) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: body,
+                    icon: icon || createIcon(192),
+                    badge: createIcon(96),
+                    tag: 'shop-notification'
+                });
+            }
+        }
+
+        // Keyboard shortcuts for desktop PWA
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        document.querySelector('.nav-item:nth-child(1)').click();
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        document.querySelector('.nav-item:nth-child(2)').click();
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        document.querySelector('.nav-item:nth-child(3)').click();
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        exportData();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        saveData();
+                        showMobileAlert('Данные сохранены!', 'success');
+                        break;
+                }
+            }
+        });
+
+        // Auto-save every 30 seconds
+        setInterval(() => {
+            saveData();
+        }, 30000);
+
+        // Periodically sync data and show success
+        setInterval(() => {
+            if (navigator.onLine) {
+                const lastSync = localStorage.getItem('shop-last-sync');
+                if (lastSync) {
+                    const syncTime = new Date(lastSync);
+                    const now = new Date();
+                    const diffMinutes = (now - syncTime) / 1000 / 60;
+                    
+                    if (diffMinutes > 5) { // If more than 5 minutes since last sync
+                        localStorage.setItem('shop-last-sync', now.toISOString());
+                    }
+                }
+            }
+        }, 60000); // Check every minute
+    </script>
+</body>
+</html>
