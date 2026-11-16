@@ -58,7 +58,7 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative}
   background:color-mix(in srgb,var(--c) 22%,var(--surface));border-left:4px solid var(--c);
   color:var(--text);font-size:13px;line-height:1.25}
 .ev b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ev small{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.ev small{display:block;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ev.done{opacity:.5}
 .ev.done b{text-decoration:line-through}
 .now{position:absolute;left:calc(var(--gutter) - 5px);right:0;height:2px;background:var(--now);pointer-events:none;z-index:3}
@@ -179,7 +179,7 @@ textarea{resize:vertical;min-height:60px}
     <p class="note">Все данные хранятся только на этом устройстве. Делайте резервную копию: при очистке данных браузера они пропадут.</p>
     <div class="btns">
       <button class="btn" id="exp">Сохранить копию</button>
-      <button class="btn" id="imp">Загрузить копию</button>
+      <button class="btn" id="imp">Загрузить файл</button>
     </div>
     <input type="file" id="impFile" accept="application/json,.json" hidden>
     <button class="btn" id="setClose">Закрыть</button>
@@ -311,6 +311,7 @@ function renderDay(today){
     const t = document.createElement('b'); t.textContent = g.t.title;
     const sm = document.createElement('small'); sm.textContent = hm(g.t.start)+' – '+hm(g.t.end)+(g.tail?' · со вчера':'');
     b.append(t, sm);
+    if (g.t.notes && g.e-g.s >= 60){ const nt = document.createElement('small'); nt.textContent = g.t.notes.split('\n')[0]; b.append(nt); }
     b.addEventListener('click', () => openEditor({task:g.t, occ:g.occ}));
     lane.append(b);
   }
@@ -457,8 +458,18 @@ $('#impFile').addEventListener('change', async e => {
   try{
     const data = JSON.parse(await f.text()), list = Array.isArray(data) ? data : data.tasks;
     if (!Array.isArray(list) || !list.every(validTask)) throw 0;
-    if (!confirm('Заменить текущие дела ('+tasks.length+') делами из копии ('+list.length+')?')) return;
-    tasks = list; save(); $('#set').close(); render(); toast('Копия загружена');
+    if (!Array.isArray(data) && data.mode === 'merge'){
+      if (!confirm('Добавить '+list.length+' дел из файла? Ваши текущие дела останутся.')) return;
+      for (const n of list){
+        const old = n.id && tasks.find(x => x.id === n.id);
+        if (old) Object.assign(old, n, {done: old.done||{}, skip: old.skip||{}});
+        else tasks.push(Object.assign({id: Date.now().toString(36)+Math.random().toString(36).slice(2,7), done:{}, skip:{}}, n));
+      }
+    } else {
+      if (!confirm('Заменить текущие дела ('+tasks.length+') делами из копии ('+list.length+')?')) return;
+      tasks = list;
+    }
+    save(); $('#set').close(); render(); toast('Файл загружен');
   }catch(err){ toast('Файл не похож на копию планировщика'); }
 });
 function validTask(t){
