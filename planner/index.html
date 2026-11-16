@@ -183,6 +183,7 @@ textarea{resize:vertical;min-height:60px}
     </div>
     <input type="file" id="impFile" accept="application/json,.json" hidden>
     <button class="btn" id="setClose">Закрыть</button>
+    <p class="note" style="text-align:center">Версия 3</p>
   </div>
 </dialog>
 
@@ -458,18 +459,18 @@ $('#impFile').addEventListener('change', async e => {
   try{
     const data = JSON.parse(await f.text()), list = Array.isArray(data) ? data : data.tasks;
     if (!Array.isArray(list) || !list.every(validTask)) throw 0;
-    if (!Array.isArray(data) && data.mode === 'merge'){
-      if (!confirm('Добавить '+list.length+' дел из файла? Ваши текущие дела останутся.')) return;
-      for (const n of list){
-        const old = n.id && tasks.find(x => x.id === n.id);
-        if (old) Object.assign(old, n, {done: old.done||{}, skip: old.skip||{}});
-        else tasks.push(Object.assign({id: Date.now().toString(36)+Math.random().toString(36).slice(2,7), done:{}, skip:{}}, n));
-      }
-    } else {
-      if (!confirm('Заменить текущие дела ('+tasks.length+') делами из копии ('+list.length+')?')) return;
-      tasks = list;
+    // Loading a file never removes anything: new entries are added, an entry already present
+    // is left as it is unless its date or time differs in the file.
+    if (!confirm('Загрузить '+list.length+' дел из файла? Ваши текущие дела останутся.')) return;
+    const same = (x, n) => x.date === n.date && x.start === n.start && x.end === n.end;
+    let added = 0, updated = 0, kept = 0;
+    for (const n of list){
+      const old = (n.id && tasks.find(x => x.id === n.id)) || tasks.find(x => x.title === n.title && same(x, n));
+      if (!old){ tasks.push(Object.assign({done:{}, skip:{}}, n, {id: n.id || Date.now().toString(36)+Math.random().toString(36).slice(2,7)})); added++; }
+      else if (same(old, n)) kept++;
+      else { Object.assign(old, n, {id: old.id, done: old.done||{}, skip: old.skip||{}}); updated++; }
     }
-    save(); $('#set').close(); render(); toast('Файл загружен');
+    save(); $('#set').close(); render(); toast('Добавлено: '+added+' · обновлено: '+updated+' · без изменений: '+kept);
   }catch(err){ toast('Файл не похож на копию планировщика'); }
 });
 function validTask(t){
@@ -515,7 +516,12 @@ setInterval(() => {
 }, 15000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) checkReminders(); });
 
-if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && location.protocol !== 'file:'){
+  // When an updated service worker takes over, reload once so the new version is shown right away.
+  const had = !!navigator.serviceWorker.controller; let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !reloaded){ reloaded = true; location.reload(); } });
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 render(); checkReminders();
 </script>
 </body>
